@@ -12,8 +12,6 @@ android {
         applicationId APPLICATION_ID
         versionCode gitVersionCode.toInteger()
         versionName gitVersionName
-
-        archivesBaseName = "${rootProject.name}-v${versionName}-${versionCode}"
     }
 
     def releaseSigning
