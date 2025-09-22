@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import one.yufz.hmspush.app.util.ShellUtil
 
-typealias ConfigMap = Map<String, List<String>>
+typealias ConfigMap = Map<String, Pair<List<String>, Boolean>>
 
 object FakeDeviceConfig {
     private const val TAG = "FakeDeviceConfig"
@@ -31,12 +31,14 @@ object FakeDeviceConfig {
             //ignore comment and blank line
             .filterNot { it.startsWith("#") || it.isBlank() }
 
-            //split by | and map to Pair(packageName,process)
+            //split by | and map to Triple(packageName,process,skipBuild)
             .map {
                 val split = it.split("|")
-                val packageName = split.get(0)
+                val raw = split.get(0)
+                val skipBuild = raw.startsWith("!")
+                val packageName = if (skipBuild) raw.removePrefix("!") else raw
                 val process = split.getOrNull(1)
-                Pair(packageName, process)
+                Triple(packageName, process, skipBuild)
             }
 
             //group by packageName
@@ -44,15 +46,18 @@ object FakeDeviceConfig {
 
             //map to Config
             .mapValues {
-                it.value.map { it.second }.filterNotNull().takeIf { it.isNotEmpty() } ?: emptyList()
+                val processes = it.value.mapNotNull { it.second }
+                val skipBuild = it.value.firstOrNull()?.third ?: false
+                Pair(processes, skipBuild)
             }
+
         Log.d(TAG, "parseConfig() returned: $configs")
         return configs
     }
 
-    suspend fun update(packageName: String, processList: List<String>) {
+    suspend fun update(packageName: String, processList: List<String>, skipBuild: Boolean = false) {
         val newMap = _configMapFlow.value.toMutableMap()
-        newMap[packageName] = processList
+        newMap[packageName] = Pair(processList, skipBuild)
         _configMapFlow.value = newMap
         writeConfig()
     }
@@ -67,10 +72,11 @@ object FakeDeviceConfig {
     suspend fun writeConfig() {
         val lines = _configMapFlow.value.entries
             .map { entry ->
-                if (entry.value.isEmpty()) {
-                    entry.key
+                val pkg = if (entry.value.second) "!${entry.key}" else entry.key
+                if (entry.value.first.isEmpty()) {
+                    pkg
                 } else {
-                    entry.value.joinToString("\\n") { "${entry.key}|$it" }
+                    entry.value.first.joinToString("\\n") { "$pkg|$it" }
                 }
             }
             .joinToString("\\n") { it }
