@@ -159,6 +159,7 @@ private fun AppBarMoreMenu(usable: Boolean) {
                     },
                     onClick = {
                         navigator.navigate(Router.FakeDevice)
+                        openMoreMenu = false
                     }
                 )
                 val context = LocalContext.current
