@@ -1,9 +1,10 @@
 package one.yufz.hmspush.app.fake
 
-import android.app.Application
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.application
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import one.yufz.hmspush.app.App
 import one.yufz.hmspush.app.hms.SupportHmsAppList
 
 data class AppConfig(val name: String, val packageName: String, val enabled: Boolean)
@@ -20,13 +22,15 @@ data class UIState(val configList: List<AppConfig>, val filterKeywords: String =
         configList.filter { it.name.contains(filterKeywords, true) || it.packageName.contains(filterKeywords, true) }
 }
 
-class FakeDeviceViewModel(val app: Application) : AndroidViewModel(app) {
+class FakeDeviceViewModel() : ViewModel() {
     companion object {
         private const val TAG = "FakeDeviceViewModel"
     }
 
     private val _uiState = MutableStateFlow<UIState>(UIState(emptyList()))
     val uiState = _uiState
+
+    private val app = App.instance
 
     private val supportedAppList = SupportHmsAppList(app)
 

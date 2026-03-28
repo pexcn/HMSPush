@@ -1,20 +1,22 @@
 package one.yufz.hmspush.app.settings
 
-import android.app.Application
 import android.content.ComponentName
 import android.content.pm.PackageManager
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import one.yufz.hmspush.app.App
 import one.yufz.hmspush.app.HmsPushClient
 import one.yufz.hmspush.app.mainActivityAlias
 import one.yufz.hmspush.common.HmsCoreUtil
 import one.yufz.hmspush.common.model.PrefsModel
 
-class SettingsViewModel(val context: Application) : AndroidViewModel(context) {
+class SettingsViewModel : ViewModel() {
+    private val context = App.instance
+
     private val _preferences = MutableStateFlow(PrefsModel())
 
     val preferences: Flow<PrefsModel> = _preferences

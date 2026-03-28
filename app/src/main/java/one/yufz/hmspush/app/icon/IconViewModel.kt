@@ -1,7 +1,7 @@
 package one.yufz.hmspush.app.icon
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -11,20 +11,22 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import one.yufz.hmspush.R
+import one.yufz.hmspush.app.App
 import one.yufz.hmspush.app.HmsPushClient
-import one.yufz.hmspush.common.BridgeWrap
 import one.yufz.hmspush.common.IconData
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
 
-class IconViewModel(val app: Application) : AndroidViewModel(app) {
+class IconViewModel : ViewModel() {
     companion object {
         private const val TAG = "IconViewModel"
         const val ICON_URL = "https://raw.githubusercontent.com/fankes/AndroidNotifyIconAdapt/main/APP/NotifyIconsSupportConfig.json"
     }
 
     data class ImportState(val loading: Boolean, val info: String? = null)
+
+    private val app = App.instance
 
     private val _iconsFlow = MutableStateFlow<List<IconData>>(emptyList())
 
@@ -56,7 +58,7 @@ class IconViewModel(val app: Application) : AndroidViewModel(app) {
                 return@launch
             }
 
-            _importState.emit(ImportState(false, getApplication<Application>().getString(R.string.import_complete)))
+            _importState.emit(ImportState(false, app.getString(R.string.import_complete)))
 
             loadIcon()
         }

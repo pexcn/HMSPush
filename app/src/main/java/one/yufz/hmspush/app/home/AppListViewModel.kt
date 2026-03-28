@@ -2,12 +2,13 @@ package one.yufz.hmspush.app.home
 
 import android.app.Application
 import android.content.pm.PackageManager
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import one.yufz.hmspush.app.App
 import one.yufz.hmspush.app.HmsPushClient
 import one.yufz.hmspush.app.fake.ConfigMap
 import one.yufz.hmspush.app.fake.FakeDeviceConfig
@@ -15,10 +16,12 @@ import one.yufz.hmspush.app.hms.SupportHmsAppList
 import one.yufz.hmspush.common.model.PushHistoryModel
 import one.yufz.hmspush.common.model.PushSignModel
 
-class AppListViewModel(val context: Application) : AndroidViewModel(context) {
+class AppListViewModel : ViewModel() {
     companion object {
         private const val TAG = "AppListViewModel"
     }
+
+    private val context: Application = App.instance
 
     private val filterKeywords = MutableStateFlow<String>("")
 

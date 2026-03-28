@@ -1,9 +1,8 @@
 package one.yufz.hmspush.app.home
 
-import android.app.Application
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -13,13 +12,14 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import one.yufz.hmspush.R
+import one.yufz.hmspush.app.App
 import one.yufz.hmspush.app.HmsPushClient
 import one.yufz.hmspush.app.util.registerPackageChangeFlow
 import one.yufz.hmspush.common.API_VERSION
 import one.yufz.hmspush.common.HMS_PACKAGE_NAME
 import one.yufz.hmspush.common.VERSION_NAME
 
-class HomeViewModel(val app: Application) : AndroidViewModel(app) {
+class HomeViewModel() : ViewModel() {
     enum class Reason {
         None,
         Checking,
@@ -29,6 +29,8 @@ class HomeViewModel(val app: Application) : AndroidViewModel(app) {
     }
 
     data class UiState(val usable: Boolean, val tips: String, val reason: Reason)
+
+    private val app = App.instance
 
     private val _uiState = MutableStateFlow(UiState(false, "", Reason.Checking))
     val uiState: StateFlow<UiState> = _uiState
