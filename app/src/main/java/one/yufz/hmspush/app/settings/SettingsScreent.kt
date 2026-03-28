@@ -16,13 +16,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Android
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Computer
 import androidx.compose.material.icons.outlined.FormatColorFill
 import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.RemoveModerator
-import androidx.compose.material.icons.outlined.Upgrade
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,13 +43,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import one.yufz.hmspush.R
-import one.yufz.hmspush.app.LocalNavHostController
+import one.yufz.hmspush.app.nav.LocalNavigator
+import one.yufz.hmspush.app.nav.Router
 import one.yufz.hmspush.common.model.PrefsModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
-    val navHostController = LocalNavHostController.current
+    val navigator = LocalNavigator.current
 
     Scaffold(
         topBar = {
@@ -59,7 +58,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            navHostController.popBackStack()
+                            navigator.goBack()
                         }
                     ) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "back")
@@ -112,7 +111,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                         viewModel.updatePreference { useCustomIcon = it }
                     },
                     onClick = {
-                        navHostController.navigate("icon")
+                        navigator.navigate(Router.Icon)
                     }
                 )
                 if (preferences.useCustomIcon) {

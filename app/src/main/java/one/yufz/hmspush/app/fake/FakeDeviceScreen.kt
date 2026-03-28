@@ -48,12 +48,12 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import one.yufz.hmspush.R
-import one.yufz.hmspush.app.LocalNavHostController
+import one.yufz.hmspush.app.nav.LocalNavigator
 import one.yufz.hmspush.app.widget.SearchBar
 
 @Composable
 fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = viewModel()) {
-    val navHostController = LocalNavHostController.current
+    val navigator = LocalNavigator.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     val uiState by viewModel.uiState.collectAsState()
@@ -63,7 +63,7 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = viewModel()) {
             TopAppBar(
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(onClick = { navHostController.popBackStack() }) {
+                    IconButton(onClick = { navigator.goBack() }) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },

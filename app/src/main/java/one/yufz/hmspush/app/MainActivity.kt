@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
+import one.yufz.hmspush.app.nav.AppNavDisplay
 import one.yufz.hmspush.app.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -12,7 +13,7 @@ class MainActivity : ComponentActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             AppTheme {
-                AppNavHost()
+                AppNavDisplay()
             }
         }
     }

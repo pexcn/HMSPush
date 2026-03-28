@@ -6,9 +6,7 @@
 
 package one.yufz.hmspush.app.home
 
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Box
@@ -50,8 +48,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import one.yufz.hmspush.R
 import one.yufz.hmspush.app.HmsPushClient
-import one.yufz.hmspush.app.LocalNavHostController
-import one.yufz.hmspush.app.Routers
+import one.yufz.hmspush.app.nav.LocalNavigator
+import one.yufz.hmspush.app.nav.Router
 import one.yufz.hmspush.app.widget.LifecycleAware
 import one.yufz.hmspush.app.widget.SearchBar
 import one.yufz.hmspush.common.HMS_PACKAGE_NAME
@@ -144,13 +142,13 @@ private fun AppBarMoreMenu(usable: Boolean) {
                 onDismissRequest = { openMoreMenu = false },
                 modifier = Modifier.requiredWidth(160.dp)
             ) {
-                val navController = LocalNavHostController.current
+                val navigator = LocalNavigator.current
                 DropdownMenuItem(
                     text = {
                         Text(text = stringResource(id = R.string.menu_settings))
                     },
                     onClick = {
-                        navController.navigate("settings")
+                        navigator.navigate(Router.Settings)
                         openMoreMenu = false
                     },
                     enabled = usable
@@ -160,7 +158,7 @@ private fun AppBarMoreMenu(usable: Boolean) {
                         Text(text = stringResource(id = R.string.fake_device))
                     },
                     onClick = {
-                        navController.navigate(Routers.FAKE_DEVICE)
+                        navigator.navigate(Router.FakeDevice)
                     }
                 )
                 val context = LocalContext.current

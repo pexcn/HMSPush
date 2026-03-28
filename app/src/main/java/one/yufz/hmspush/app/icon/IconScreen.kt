@@ -10,7 +10,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -63,17 +62,16 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.charlex.compose.HtmlText
 import one.yufz.hmspush.R
-import one.yufz.hmspush.app.LocalNavHostController
+import one.yufz.hmspush.app.nav.LocalNavigator
 import one.yufz.hmspush.app.widget.LoadingDialog
 import one.yufz.hmspush.app.widget.SearchBar
 
 @Composable
 fun IconScreen(iconViewModel: IconViewModel = viewModel()) {
-    val navHostController = LocalNavHostController.current
+    val navigator = LocalNavigator.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     var searching by remember { mutableStateOf(false) }
 
@@ -81,7 +79,7 @@ fun IconScreen(iconViewModel: IconViewModel = viewModel()) {
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = { navHostController.popBackStack() }) {
+                    IconButton(onClick = { navigator.goBack() }) {
                         Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },

@@ -5,6 +5,7 @@ plugins {
 
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.kotlin.serialization)
 
 }
 
@@ -80,8 +81,9 @@ dependencies {
     implementation(libs.accompanist.drawablepainter)
 
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.navigation.runtime.ktx)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.compose.html.text)
 }

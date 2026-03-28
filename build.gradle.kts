@@ -25,7 +25,7 @@ val appApplicationId by extra("one.yufz.hmspush")
 val appVersionCode by extra(commitCount)
 val appVersionName by extra(latestTag)
 
-val androidTargetSdkVersion by extra(35)
+val androidTargetSdkVersion by extra(36)
 val androidMinSdkVersion by extra(27)
 
 val androidCompileSdkVersion by extra(36)
