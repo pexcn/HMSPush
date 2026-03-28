@@ -5,6 +5,7 @@ composeBom = "2026.03.01"
 lifecycle = "2.10.0"
 activity = "1.13.0"
 navigation3Core = "1.0.1"
+miuix = "0.8.8"
 kotlinSerialization = "1.10.0"
 accompanistDrawable = "0.37.3"
 htmlText = "1.6.0"
@@ -18,7 +19,7 @@ androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "l
 androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version.ref = "activity" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3Core" }
-androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3Core" }
+androidx-navigation3-ui = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui-android", version.ref = "miuix" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
