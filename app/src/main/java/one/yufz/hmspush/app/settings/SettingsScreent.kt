@@ -130,7 +130,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                     title = stringResource(id = R.string.hide_app_icon),
                     icon = Icons.Outlined.Palette,
                     checked = preferences.hideAppIcon,
-                    showDivider = true,
+                    showDivider = false,
                     onCheckedChange = viewModel::toggleAppIcon,
                 )
             }
