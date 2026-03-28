@@ -8,7 +8,7 @@ import org.lsposed.lsplugin.ApksignPlugin
 plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
-    alias(libs.plugins.kotlin.android) apply false
+
     alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.lsplugin.jgit)
@@ -27,7 +27,7 @@ val appVersionName by extra(latestTag)
 
 val androidTargetSdkVersion by extra(35)
 val androidMinSdkVersion by extra(27)
-val androidBuildToolsVersion by extra("35.0.0")
+
 val androidCompileSdkVersion by extra(36)
 val androidSourceCompatibility by extra(JavaVersion.VERSION_21)
 val androidTargetCompatibility by extra(JavaVersion.VERSION_21)
@@ -40,20 +40,14 @@ subprojects {
     plugins.withType<AndroidBasePlugin> {
         extensions.configure(CommonExtension::class.java) {
             compileSdk = androidCompileSdkVersion
-            buildToolsVersion = androidBuildToolsVersion
 
-            defaultConfig {
-                minSdk = androidMinSdkVersion
-            }
-            lint {
-                abortOnError = true
-                checkReleaseBuilds = false
-            }
 
-            compileOptions {
-                sourceCompatibility = androidSourceCompatibility
-                targetCompatibility = androidTargetCompatibility
-            }
+            defaultConfig.minSdk = androidMinSdkVersion
+            lint.abortOnError = true
+            lint.checkReleaseBuilds = false
+
+            compileOptions.sourceCompatibility = androidSourceCompatibility
+            compileOptions.targetCompatibility = androidTargetCompatibility
         }
         extensions.configure(BasePluginExtension::class.java) {
             archivesName.set("${rootProject.name}-v$appVersionName-$appVersionCode")
