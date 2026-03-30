@@ -1,12 +1,10 @@
 package one.yufz.hmspush.app.icon
 
-import android.app.Application
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.airbnb.mvrx.MavericksState
+import com.airbnb.mvrx.MavericksViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -18,7 +16,18 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URL
 
-class IconViewModel : ViewModel() {
+data class IconState(
+    val icons: List<IconData> = emptyList(),
+    val filterKeywords: String = "",
+    val importState: IconViewModel.ImportState = IconViewModel.ImportState(false)
+) : MavericksState {
+    val filteredIcons: List<IconData>
+        get() = if (filterKeywords.isEmpty()) icons else icons.filter {
+            it.appName.contains(filterKeywords, true) || it.packageName.contains(filterKeywords, true)
+        }
+}
+
+class IconViewModel(initialState: IconState) : MavericksViewModel<IconState>(initialState) {
     companion object {
         private const val TAG = "IconViewModel"
         const val ICON_URL = "https://raw.githubusercontent.com/fankes/AndroidNotifyIconAdapt/main/APP/NotifyIconsSupportConfig.json"
@@ -28,37 +37,24 @@ class IconViewModel : ViewModel() {
 
     private val app = App.instance
 
-    private val _iconsFlow = MutableStateFlow<List<IconData>>(emptyList())
-
-    private val _importState = MutableStateFlow<ImportState>(ImportState(false))
-    val importState: StateFlow<ImportState> = _importState
-
-    private val filterKeywords = MutableStateFlow<String>("")
-
-    val iconsFlow: Flow<List<IconData>> = _iconsFlow.combine(filterKeywords) { list, keywords ->
-        if (keywords.isEmpty()) return@combine list
-
-        list.filter { it.appName.contains(keywords, true) || it.packageName.contains(keywords, true) }
-    }
-
     init {
         loadIcon()
     }
 
     fun fetchIconFromUrl(url: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            _importState.emit(ImportState(true))
+            setState { copy(importState = ImportState(true)) }
 
             try {
                 readIconFromUrl(url).forEach {
                     HmsPushClient.saveIcon(it)
                 }
             } catch (e: Throwable) {
-                _importState.emit(ImportState(false, e.message))
+                setState { copy(importState = ImportState(false, e.message)) }
                 return@launch
             }
 
-            _importState.emit(ImportState(false, app.getString(R.string.import_complete)))
+            setState { copy(importState = ImportState(false, app.getString(R.string.import_complete))) }
 
             loadIcon()
         }
@@ -66,7 +62,8 @@ class IconViewModel : ViewModel() {
 
     fun loadIcon() {
         viewModelScope.launch(Dispatchers.IO) {
-            _iconsFlow.value = HmsPushClient.allIcon.mapNotNull { it.toIconData() }
+            val icons = HmsPushClient.allIcon.mapNotNull { it.toIconData() }
+            setState { copy(icons = icons) }
         }
     }
 
@@ -85,13 +82,11 @@ class IconViewModel : ViewModel() {
     }
 
     fun cancelImport() {
-        _importState.value = ImportState(false)
+        setState { copy(importState = ImportState(false)) }
     }
 
     fun filter(keywords: String) {
-        viewModelScope.launch {
-            filterKeywords.emit(keywords)
-        }
+        setState { copy(filterKeywords = keywords) }
     }
 
     fun clearIcons() {
@@ -102,9 +97,9 @@ class IconViewModel : ViewModel() {
     }
 
     fun deleteIcon(vararg packageName: String) {
-        viewModelScope.launch() {
+        viewModelScope.launch {
             val set = packageName.toHashSet()
-            _iconsFlow.value = _iconsFlow.value.filterNot { it.packageName in set }
+            setState { copy(icons = icons.filterNot { it.packageName in set }) }
 
             HmsPushClient.deleteIcon(*packageName)
         }

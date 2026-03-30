@@ -87,4 +87,5 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.compose.html.text)
+    implementation(libs.mavericks.compose)
 }

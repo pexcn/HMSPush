@@ -30,7 +30,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,20 +42,21 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.mvrx.compose.collectAsState
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import one.yufz.hmspush.R
 import one.yufz.hmspush.app.nav.LocalNavigator
 import one.yufz.hmspush.app.widget.SearchBar
+import one.yufz.hmspush.app.workaround.mavericksViewModel
 
 @Composable
-fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = viewModel()) {
+fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
     val navigator = LocalNavigator.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-    val uiState by viewModel.uiState.collectAsState()
+    val state by viewModel.collectAsState()
 
     Scaffold(
         topBar = {
@@ -83,7 +83,7 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = viewModel()) {
                         }
                     } else {
                         SearchBar(
-                            searchText = uiState.filterKeywords,
+                            searchText = state.filterKeywords,
                             placeholderText = stringResource(id = R.string.menu_search),
                             onNavigateBack = { searching = false },
                             onSearchTextChanged = { viewModel.filter(it) }
@@ -99,7 +99,7 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = viewModel()) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = paddingValues,
             ) {
-                items(uiState.filteredConfigList) { config ->
+                items(state.filteredConfigList) { config ->
                     AppCard(config) {
                         viewModel.update(config.copy(enabled = it))
                     }

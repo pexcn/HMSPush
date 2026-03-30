@@ -12,6 +12,8 @@ htmlText = "1.6.0"
 coroutinesAndroid = "1.10.2"
 xposedApi = "82"
 hiddenApiBypass = "6.1"
+mavericks = "3.1.0"
+
 
 [libraries]
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
@@ -36,6 +38,9 @@ compose-html-text = { group = "de.charlex.compose", name = "html-text", version.
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutinesAndroid" }
 xposed-api = { group = "de.robv.android.xposed", name = "api", version.ref = "xposedApi" }
 hiddenapibypass = { group = "org.lsposed.hiddenapibypass", name = "hiddenapibypass", version.ref = "hiddenApiBypass" }
+mavericks = { module = "com.airbnb.android:mavericks", version.ref = "mavericks" }
+mavericks-compose = { module = "com.airbnb.android:mavericks-compose", version.ref = "mavericks" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -32,7 +32,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,15 +40,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.mvrx.compose.collectAsState
 import one.yufz.hmspush.R
 import one.yufz.hmspush.app.nav.LocalNavigator
 import one.yufz.hmspush.app.nav.Router
-import one.yufz.hmspush.common.model.PrefsModel
+import one.yufz.hmspush.app.workaround.mavericksViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
+fun SettingsScreen(viewModel: SettingsViewModel = mavericksViewModel()) {
     val navigator = LocalNavigator.current
 
     Scaffold(
@@ -70,7 +69,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
             )
         }) { paddingValues ->
 
-        val preferences by viewModel.preferences.collectAsState(PrefsModel())
+        val state by viewModel.collectAsState()
+        val preferences = state.preferences
 
         Surface(modifier = Modifier.padding(paddingValues)) {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {

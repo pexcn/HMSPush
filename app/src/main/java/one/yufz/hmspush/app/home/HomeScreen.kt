@@ -33,7 +33,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,32 +44,29 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.mvrx.compose.collectAsState
 import one.yufz.hmspush.R
 import one.yufz.hmspush.app.HmsPushClient
 import one.yufz.hmspush.app.nav.LocalNavigator
 import one.yufz.hmspush.app.nav.Router
 import one.yufz.hmspush.app.widget.LifecycleAware
 import one.yufz.hmspush.app.widget.SearchBar
+import one.yufz.hmspush.app.workaround.mavericksViewModel
 import one.yufz.hmspush.common.HMS_PACKAGE_NAME
 import one.yufz.hmspush.common.HmsCoreUtil
 
 @Composable
-fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(homeViewModel: HomeViewModel = mavericksViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val uiState by homeViewModel.uiState.collectAsState()
-
-    val searchText by homeViewModel.searchText.collectAsState("")
-
-    val searchState: Boolean by homeViewModel.searchState.collectAsState(false)
+    val state by homeViewModel.collectAsState()
 
     Scaffold(
         topBar = {
             AppBar(
                 scrollBehavior,
-                withSearch = uiState.usable,
-                searching = searchState,
-                searchText = searchText,
+                withSearch = state.usable,
+                searching = state.searching,
+                searchText = state.searchText,
                 requestSearching = { homeViewModel.setSearching(it) },
                 onSearchTextChanged = { homeViewModel.setSearchText(it) }
             )
@@ -79,12 +75,12 @@ fun HomeScreen(homeViewModel: HomeViewModel = viewModel()) {
     ) { padding ->
         Box(modifier = Modifier.padding(top = padding.calculateTopPadding())) {
             LifecycleAware(onResume = { homeViewModel.checkHmsCore() }) {
-                if (uiState.usable) {
-                    AppListScreen(searchText)
-                } else if (uiState.reason == HomeViewModel.Reason.Checking) {
+                if (state.usable) {
+                    AppListScreen(state.searchText)
+                } else if (state.reason == HomeViewModel.Reason.Checking) {
                     Loading()
                 } else {
-                    HmsCoreTips(uiState)
+                    HmsCoreTips(state.tips, state.reason)
                 }
             }
         }
@@ -203,7 +199,7 @@ private fun Loading() {
 }
 
 @Composable
-private fun HmsCoreTips(uiState: HomeViewModel.UiState) {
+private fun HmsCoreTips(tips: String, reason: HomeViewModel.Reason) {
     val context = LocalContext.current
     Box(modifier = Modifier.fillMaxWidth()) {
         Card(
@@ -217,7 +213,7 @@ private fun HmsCoreTips(uiState: HomeViewModel.UiState) {
                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
             ),
             onClick = {
-                onTipsClick(context, uiState.reason)
+                onTipsClick(context, reason)
             }
         ) {
             Box(
@@ -225,7 +221,7 @@ private fun HmsCoreTips(uiState: HomeViewModel.UiState) {
                     .fillMaxSize()
                     .padding(8.dp)
             ) {
-                Text(text = uiState.tips, Modifier.align(Alignment.Center))
+                Text(text = tips, Modifier.align(Alignment.Center))
             }
         }
     }

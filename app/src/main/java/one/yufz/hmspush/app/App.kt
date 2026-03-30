@@ -1,6 +1,7 @@
 package one.yufz.hmspush.app
 
 import android.app.Application
+import com.airbnb.mvrx.Mavericks
 
 class App : Application() {
     companion object {
@@ -11,5 +12,6 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        Mavericks.initialize(this)
     }
 }

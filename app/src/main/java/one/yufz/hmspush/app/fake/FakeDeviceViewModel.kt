@@ -2,33 +2,32 @@ package one.yufz.hmspush.app.fake
 
 import android.content.pm.PackageManager
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.application
-import androidx.lifecycle.viewModelScope
+import com.airbnb.mvrx.MavericksState
+import com.airbnb.mvrx.MavericksViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import one.yufz.hmspush.app.App
 import one.yufz.hmspush.app.hms.SupportHmsAppList
 
 data class AppConfig(val name: String, val packageName: String, val enabled: Boolean)
 
-data class UIState(val configList: List<AppConfig>, val filterKeywords: String = "") {
-    val filteredConfigList: List<AppConfig> = if (filterKeywords.isEmpty()) configList else
-        configList.filter { it.name.contains(filterKeywords, true) || it.packageName.contains(filterKeywords, true) }
+data class FakeDeviceState(
+    val configList: List<AppConfig> = emptyList(),
+    val filterKeywords: String = ""
+) : MavericksState {
+    val filteredConfigList: List<AppConfig>
+        get() = if (filterKeywords.isEmpty()) configList else
+            configList.filter { it.name.contains(filterKeywords, true) || it.packageName.contains(filterKeywords, true) }
 }
 
-class FakeDeviceViewModel() : ViewModel() {
+class FakeDeviceViewModel(initialState: FakeDeviceState) : MavericksViewModel<FakeDeviceState>(initialState) {
     companion object {
         private const val TAG = "FakeDeviceViewModel"
     }
-
-    private val _uiState = MutableStateFlow<UIState>(UIState(emptyList()))
-    val uiState = _uiState
 
     private val app = App.instance
 
@@ -42,18 +41,20 @@ class FakeDeviceViewModel() : ViewModel() {
             supportedAppList.init()
         }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            combine(supportedAppList.appListFlow, fakeDeviceConfig.configMapFlow, ::mergeSource).collect { list ->
-                _uiState.update { old ->
-                    val appConfigs = if (old.configList.isNotEmpty()) {
-                        mergeConfigList(old.configList, list)
+        combine(supportedAppList.appListFlow, fakeDeviceConfig.configMapFlow, ::mergeSource)
+            .flowOn(Dispatchers.IO)
+            .onEach { list ->
+                setState {
+                    val appConfigs = if (configList.isNotEmpty()) {
+                        mergeConfigList(configList, list)
                     } else {
                         list.sortedByDescending { it.enabled }
                     }
-                    old.copy(configList = appConfigs)
+                    copy(configList = appConfigs)
                 }
             }
-        }
+            .launchIn(viewModelScope)
+
         load()
     }
 
@@ -101,8 +102,6 @@ class FakeDeviceViewModel() : ViewModel() {
     }
 
     fun filter(filter: String) {
-        _uiState.update {
-            it.copy(filterKeywords = filter)
-        }
+        setState { copy(filterKeywords = filter) }
     }
 }

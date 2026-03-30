@@ -2,12 +2,9 @@ package one.yufz.hmspush.app.home
 
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import com.airbnb.mvrx.MavericksState
+import com.airbnb.mvrx.MavericksViewModel
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -17,9 +14,16 @@ import one.yufz.hmspush.app.HmsPushClient
 import one.yufz.hmspush.app.util.registerPackageChangeFlow
 import one.yufz.hmspush.common.API_VERSION
 import one.yufz.hmspush.common.HMS_PACKAGE_NAME
-import one.yufz.hmspush.common.VERSION_NAME
 
-class HomeViewModel() : ViewModel() {
+data class HomeState(
+    val usable: Boolean = false,
+    val tips: String = "",
+    val reason: HomeViewModel.Reason = HomeViewModel.Reason.Checking,
+    val searching: Boolean = false,
+    val searchText: String = ""
+) : MavericksState
+
+class HomeViewModel(initialState: HomeState) : MavericksViewModel<HomeState>(initialState) {
     enum class Reason {
         None,
         Checking,
@@ -28,19 +32,7 @@ class HomeViewModel() : ViewModel() {
         HmsPushVersionNotMatch
     }
 
-    data class UiState(val usable: Boolean, val tips: String, val reason: Reason)
-
     private val app = App.instance
-
-    private val _uiState = MutableStateFlow(UiState(false, "", Reason.Checking))
-    val uiState: StateFlow<UiState> = _uiState
-
-    private var _searchState = MutableStateFlow(false)
-    val searchState: Flow<Boolean> = _searchState
-
-    private var _searchText = MutableStateFlow("")
-    val searchText: Flow<String> = _searchText
-
     private var registerJob: Job? = null
 
     init {
@@ -68,32 +60,32 @@ class HomeViewModel() : ViewModel() {
     }
 
     fun setSearching(searching: Boolean) {
-        _searchState.value = searching
+        setState { copy(searching = searching) }
     }
 
     fun checkHmsCore() {
         try {
             app.packageManager.getApplicationInfo(HMS_PACKAGE_NAME, 0)
         } catch (e: PackageManager.NameNotFoundException) {
-            _uiState.value = UiState(false, app.getString(R.string.hms_core_not_found), Reason.HmsCoreNotInstalled)
+            setState { copy(usable = false, tips = app.getString(R.string.hms_core_not_found), reason = Reason.HmsCoreNotInstalled) }
             return
         }
 
         val moduleVersion = HmsPushClient.moduleVersion
         if (moduleVersion == null) {
-            _uiState.value = UiState(false, app.getString(R.string.hms_not_activated), Reason.HmsCoreNotActivated)
+            setState { copy(usable = false, tips = app.getString(R.string.hms_not_activated), reason = Reason.HmsCoreNotActivated) }
             return
         }
 
         if (moduleVersion.apiVersion != API_VERSION) {
-            _uiState.value = UiState(false, app.getString(R.string.hms_version_not_match), Reason.HmsPushVersionNotMatch)
+            setState { copy(usable = false, tips = app.getString(R.string.hms_version_not_match), reason = Reason.HmsPushVersionNotMatch) }
             return
         }
 
-        _uiState.value = UiState(true, "", Reason.None)
+        setState { copy(usable = true, tips = "", reason = Reason.None) }
     }
 
     fun setSearchText(text: String) {
-        _searchText.value = text
+        setState { copy(searchText = text) }
     }
 }

@@ -44,7 +44,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,18 +61,20 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.mvrx.compose.collectAsState
 import de.charlex.compose.HtmlText
 import one.yufz.hmspush.R
 import one.yufz.hmspush.app.nav.LocalNavigator
 import one.yufz.hmspush.app.widget.LoadingDialog
 import one.yufz.hmspush.app.widget.SearchBar
+import one.yufz.hmspush.app.workaround.mavericksViewModel
 
 @Composable
-fun IconScreen(iconViewModel: IconViewModel = viewModel()) {
+fun IconScreen(iconViewModel: IconViewModel = mavericksViewModel()) {
     val navigator = LocalNavigator.current
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     var searching by remember { mutableStateOf(false) }
+    val state by iconViewModel.collectAsState()
 
     Scaffold(
         topBar = {
@@ -115,13 +116,11 @@ fun IconScreen(iconViewModel: IconViewModel = viewModel()) {
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
     ) { paddingValues ->
         Box {
-            val icons by iconViewModel.iconsFlow.collectAsState(initial = emptyList())
-
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = paddingValues
             ) {
-                items(icons) {
+                items(state.filteredIcons) {
                     Row(
                         Modifier.fillMaxWidth()
                     ) {
@@ -199,7 +198,7 @@ fun IconScreen(iconViewModel: IconViewModel = viewModel()) {
             }
         }
 
-        val importState by iconViewModel.importState.collectAsState()
+        val importState = state.importState
         if (importState.info != null) {
             InfoDialog(importState.info!!) {
                 iconViewModel.cancelImport()
@@ -216,7 +215,7 @@ fun IconScreen(iconViewModel: IconViewModel = viewModel()) {
 @Composable
 fun MoreMenu(showMoreMenu: Boolean, onDismissRequest: () -> Unit) {
     var showImportDialog by remember { mutableStateOf(false) }
-    val iconViewModel: IconViewModel = viewModel()
+    val iconViewModel: IconViewModel = mavericksViewModel()
     DropdownMenu(expanded = showMoreMenu, onDismissRequest = onDismissRequest, modifier = Modifier.defaultMinSize(minWidth = 160.dp)) {
         DropdownMenuItem(
             text = {

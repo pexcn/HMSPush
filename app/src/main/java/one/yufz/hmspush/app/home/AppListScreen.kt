@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
@@ -38,7 +37,6 @@ import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,7 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.mvrx.compose.collectAsState
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -62,17 +60,17 @@ import one.yufz.hmspush.app.HmsPushClient
 import one.yufz.hmspush.app.fake.FakeDeviceConfig
 import one.yufz.hmspush.app.theme.AppTheme
 import one.yufz.hmspush.app.theme.customColors
+import one.yufz.hmspush.app.workaround.mavericksViewModel
 import one.yufz.hmspush.common.HMS_PACKAGE_NAME
 import one.yufz.hmspush.common.HmsCoreUtil
-import java.lang.StringBuilder
 
 @Composable
-fun AppListScreen(searchText: String, appListViewModel: AppListViewModel = viewModel()) {
-    val appList: List<AppInfo> by appListViewModel.appListFlow.collectAsState(initial = emptyList(), Dispatchers.IO)
+fun AppListScreen(searchText: String, appListViewModel: AppListViewModel = mavericksViewModel()) {
+    val state by appListViewModel.collectAsState()
 
     appListViewModel.filter(searchText)
 
-    AppList(appList)
+    AppList(state.filteredAppList)
 }
 
 @Composable
@@ -296,7 +294,7 @@ private fun MoreDropdownMenu(expanded: Boolean, info: AppInfo, onDismissRequest:
 }
 
 @Composable
-private fun UnregisterDialog(info: AppInfo, onDismissRequest: () -> Unit, viewModel: AppListViewModel = viewModel()) {
+private fun UnregisterDialog(info: AppInfo, onDismissRequest: () -> Unit, viewModel: AppListViewModel = mavericksViewModel()) {
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {

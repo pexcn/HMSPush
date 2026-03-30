@@ -1,12 +1,13 @@
 package one.yufz.hmspush.app.home
 
-import android.app.Application
 import android.content.pm.PackageManager
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.airbnb.mvrx.MavericksState
+import com.airbnb.mvrx.MavericksViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import one.yufz.hmspush.app.App
 import one.yufz.hmspush.app.HmsPushClient
@@ -16,14 +17,22 @@ import one.yufz.hmspush.app.hms.SupportHmsAppList
 import one.yufz.hmspush.common.model.PushHistoryModel
 import one.yufz.hmspush.common.model.PushSignModel
 
-class AppListViewModel : ViewModel() {
+data class AppListState(
+    val appList: List<AppInfo> = emptyList(),
+    val filterKeywords: String = ""
+) : MavericksState {
+    val filteredAppList: List<AppInfo>
+        get() = if (filterKeywords.isEmpty()) appList else appList.filter {
+            it.name.contains(filterKeywords, true) || it.packageName.contains(filterKeywords, true)
+        }
+}
+
+class AppListViewModel(initialState: AppListState) : MavericksViewModel<AppListState>(initialState) {
     companion object {
         private const val TAG = "AppListViewModel"
     }
 
-    private val context: Application = App.instance
-
-    private val filterKeywords = MutableStateFlow<String>("")
+    private val context = App.instance
 
     private val supportedAppList = SupportHmsAppList(context)
 
@@ -31,22 +40,16 @@ class AppListViewModel : ViewModel() {
 
     private val historyListFlow = HmsPushClient.getPushHistoryFlow()
 
-    val appListFlow: Flow<List<AppInfo>> = combine(supportedAppList.appListFlow, registeredListFlow, historyListFlow, FakeDeviceConfig.configMapFlow, ::mergeSource)
-        .combine(filterKeywords, ::filterAppList)
-
     init {
         viewModelScope.launch {
             FakeDeviceConfig.loadConfig()
             supportedAppList.init()
         }
-    }
 
-    private fun filterAppList(list: List<AppInfo>, keywords: String): List<AppInfo> {
-        if (keywords.isEmpty()) return list
-
-        return list.filter {
-            it.name.contains(keywords, true) || it.packageName.contains(keywords, true)
-        }
+        combine(supportedAppList.appListFlow, registeredListFlow, historyListFlow, FakeDeviceConfig.configMapFlow, ::mergeSource)
+            .flowOn(Dispatchers.IO)
+            .onEach { list -> setState { copy(appList = list) } }
+            .launchIn(viewModelScope)
     }
 
     private fun mergeSource(appList: List<String>, registered: List<PushSignModel>, history: List<PushHistoryModel>, configMap: ConfigMap): List<AppInfo> {
@@ -70,9 +73,7 @@ class AppListViewModel : ViewModel() {
     }
 
     fun filter(keywords: String) {
-        viewModelScope.launch {
-            filterKeywords.emit(keywords)
-        }
+        setState { copy(filterKeywords = keywords) }
     }
 
     fun unregisterPush(packageName: String) {
