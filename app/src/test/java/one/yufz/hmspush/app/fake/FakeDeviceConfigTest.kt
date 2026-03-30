@@ -11,11 +11,17 @@ class FakeDeviceConfigTest {
         var content: String = ""
         var success: Boolean = true
 
-        override suspend fun loadConfig(): String = content
+        override suspend fun loadConfig(): Result<String> {
+            return if (success) Result.success(content) else Result.failure(Exception("Load failed"))
+        }
 
-        override suspend fun saveConfig(content: String): Boolean {
-            this.content = content
-            return success
+        override suspend fun saveConfig(content: String): Result<Unit> {
+            return if (success) {
+                this.content = content
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Save failed"))
+            }
         }
     }
 

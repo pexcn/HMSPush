@@ -17,7 +17,8 @@ data class AppConfig(val name: String, val packageName: String, val enabled: Boo
 
 data class FakeDeviceState(
     val configList: List<AppConfig> = emptyList(),
-    val filterKeywords: String = ""
+    val filterKeywords: String = "",
+    val error: Throwable? = null
 ) : MavericksState {
     val filteredConfigList: List<AppConfig>
         get() = if (filterKeywords.isEmpty()) configList else
@@ -36,11 +37,6 @@ class FakeDeviceViewModel(initialState: FakeDeviceState) : MavericksViewModel<Fa
     private val fakeDeviceConfig = FakeDeviceConfig
 
     init {
-        viewModelScope.launch {
-            fakeDeviceConfig.loadConfig()
-            supportedAppList.init()
-        }
-
         combine(supportedAppList.appListFlow, fakeDeviceConfig.configMapFlow, ::mergeSource)
             .flowOn(Dispatchers.IO)
             .onEach { list ->
@@ -55,7 +51,10 @@ class FakeDeviceViewModel(initialState: FakeDeviceState) : MavericksViewModel<Fa
             }
             .launchIn(viewModelScope)
 
-        load()
+        viewModelScope.launch(Dispatchers.IO) {
+            fakeDeviceConfig.loadConfig()
+            supportedAppList.init()
+        }
     }
 
     /**
@@ -85,23 +84,24 @@ class FakeDeviceViewModel(initialState: FakeDeviceState) : MavericksViewModel<Fa
         }
     }
 
-    fun load() {
-        viewModelScope.launch {
-            fakeDeviceConfig.loadConfig()
-        }
-    }
-
     fun update(appConfig: AppConfig) {
         viewModelScope.launch {
-            if (appConfig.enabled) {
+            val result = if (appConfig.enabled) {
                 fakeDeviceConfig.update(appConfig.packageName, emptyList())
             } else {
                 fakeDeviceConfig.deleteConfig(appConfig.packageName)
+            }
+            result.onFailure {
+                setState { copy(error = it) }
             }
         }
     }
 
     fun filter(filter: String) {
         setState { copy(filterKeywords = filter) }
+    }
+
+    fun onErrorShown() {
+        setState { copy(error = null) }
     }
 }

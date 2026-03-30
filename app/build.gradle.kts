@@ -64,7 +64,7 @@ android {
 dependencies {
     api(project(":common"))
     api(project(":xposed"))
-    
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
 

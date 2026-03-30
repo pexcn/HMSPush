@@ -7,20 +7,15 @@ import one.yufz.hmspush.app.util.ShellUtil
 import one.yufz.hmspush.app.util.SystemPropertiesUtil
 
 interface ConfigStore {
-    suspend fun loadConfig(): String
-    suspend fun saveConfig(content: String): Boolean
+    suspend fun loadConfig(): Result<String>
+    suspend fun saveConfig(content: String): Result<Unit>
 }
 
 class ZygiskConfigStore(private val configPath: String) : ConfigStore {
-    override suspend fun loadConfig(): String {
-        val result = ShellUtil.executeCommand("su", "-c", "cat $configPath")
-        return if (result.isSuccess) result.output else ""
-    }
+    override suspend fun loadConfig(): Result<String> = ShellUtil.executeCommand("su", "-c", "cat $configPath")
 
-    override suspend fun saveConfig(content: String): Boolean {
-        val result = ShellUtil.executeCommand("su", "-c", "mkdir -p \$(dirname $configPath) && echo '$content' > $configPath")
-        return result.isSuccess
-    }
+    override suspend fun saveConfig(content: String): Result<Unit> =
+        ShellUtil.executeCommand("su", "-c", "mkdir -p \$(dirname $configPath) && echo '$content' > $configPath").map { Unit }
 }
 
 typealias ConfigMap = Map<String, List<String>>
@@ -37,10 +32,12 @@ object FakeDeviceConfig {
     private var _configMapFlow: MutableStateFlow<ConfigMap> = MutableStateFlow(emptyMap())
     val configMapFlow: StateFlow<ConfigMap> = _configMapFlow
 
-    suspend fun loadConfig(): ConfigMap {
-        val content = configStore.loadConfig()
-        _configMapFlow.value = parseConfig(content)
-        return _configMapFlow.value
+    suspend fun loadConfig(): Result<ConfigMap> {
+        return configStore.loadConfig().map { content ->
+            val configMap = parseConfig(content)
+            _configMapFlow.value = configMap
+            configMap
+        }
     }
 
     fun parseConfig(lines: String): ConfigMap {
@@ -67,18 +64,20 @@ object FakeDeviceConfig {
         return configs
     }
 
-    suspend fun update(packageName: String, processList: List<String>) {
+    suspend fun update(packageName: String, processList: List<String>): Result<Unit> {
         val newMap = _configMapFlow.value.toMutableMap()
         newMap[packageName] = processList
-        _configMapFlow.value = newMap
-        writeConfig()
+        return writeConfig(newMap).onSuccess {
+            _configMapFlow.value = newMap
+        }
     }
 
-    suspend fun deleteConfig(packageName: String) {
+    suspend fun deleteConfig(packageName: String): Result<Unit> {
         val newMap = _configMapFlow.value.toMutableMap()
         newMap.remove(packageName)
-        _configMapFlow.value = newMap
-        writeConfig()
+        return writeConfig(newMap).onSuccess {
+            _configMapFlow.value = newMap
+        }
     }
 
     fun serializeConfig(configMap: ConfigMap): String {
@@ -93,14 +92,12 @@ object FakeDeviceConfig {
             .joinToString("\n")
     }
 
-    suspend fun writeConfig() {
-        val content = serializeConfig(_configMapFlow.value)
-        val success = configStore.saveConfig(content)
-
-        if (success) {
+    suspend fun writeConfig(config: ConfigMap): Result<Unit> {
+        val content = serializeConfig(config)
+        return configStore.saveConfig(content).onSuccess {
             Log.d(TAG, "writeConfig success")
-        } else {
-            Log.e(TAG, "writeConfig failed")
+        }.onFailure {
+            Log.e(TAG, "writeConfig failed", it)
         }
     }
 

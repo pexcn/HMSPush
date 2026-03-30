@@ -10,9 +10,7 @@ import java.io.InputStreamReader
 object ShellUtil {
     private const val TAG = "ShellUtil"
 
-    class Result(val output: String, val isSuccess: Boolean)
-
-    suspend fun executeCommand(vararg command: String): Result = withContext(Dispatchers.IO) {
+    suspend fun executeCommand(vararg command: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "executeCommand() called with: command = ${command.contentToString()}")
 
@@ -36,12 +34,12 @@ object ShellUtil {
             val exitValue = process.waitFor()
 
             if (exitValue == 0) {
-                Result(output.toString(), true)
+                Result.success(output.toString().trim())
             } else {
-                Result(output.toString(), false)
+                Result.failure(Exception(output.toString().trim()))
             }
         } catch (e: Exception) {
-            Result(e.message ?: "Unknown error", false)
+            Result.failure(e)
         }
     }
 }
