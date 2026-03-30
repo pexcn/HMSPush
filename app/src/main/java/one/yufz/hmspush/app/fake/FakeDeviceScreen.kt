@@ -57,6 +57,7 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
     val state by viewModel.collectAsState()
+    var searching by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -68,15 +69,15 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
                     }
                 },
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(text = stringResource(id = R.string.fake_device))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Tips()
+                    if (!searching) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = stringResource(id = R.string.fake_device))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Tips()
+                        }
                     }
                 },
                 actions = {
-                    var searching by remember { mutableStateOf(false) }
-
                     if (!searching) {
                         IconButton(onClick = { searching = true }) {
                             Icon(imageVector = Icons.Filled.Search, contentDescription = "Search")
