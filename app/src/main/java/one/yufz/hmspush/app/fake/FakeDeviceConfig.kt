@@ -4,11 +4,14 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import one.yufz.hmspush.app.util.ShellUtil
+import one.yufz.hmspush.app.util.SystemPropertiesUtil
 
 typealias ConfigMap = Map<String, List<String>>
 
 object FakeDeviceConfig {
     private const val TAG = "FakeDeviceConfig"
+
+    val zygiskEnabled = SystemPropertiesUtil.get("hmspush.zygisk.enabled") == true.toString()
 
     private const val CONFIG_PATH = "/data/adb/hmspush/app.conf"
 
