@@ -55,11 +55,18 @@ android {
         compose = true
         buildConfig = true
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
     api(project(":common"))
     api(project(":xposed"))
+    
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // Keep Xposed APIs available to avoid stripping code in library modules.
     compileOnly(libs.xposed.api)

@@ -6,6 +6,23 @@ import kotlinx.coroutines.flow.StateFlow
 import one.yufz.hmspush.app.util.ShellUtil
 import one.yufz.hmspush.app.util.SystemPropertiesUtil
 
+interface ConfigStore {
+    suspend fun loadConfig(): String
+    suspend fun saveConfig(content: String): Boolean
+}
+
+class ZygiskConfigStore(private val configPath: String) : ConfigStore {
+    override suspend fun loadConfig(): String {
+        val result = ShellUtil.executeCommand("su", "-c", "cat $configPath")
+        return if (result.isSuccess) result.output else ""
+    }
+
+    override suspend fun saveConfig(content: String): Boolean {
+        val result = ShellUtil.executeCommand("su", "-c", "mkdir -p \$(dirname $configPath) && echo '$content' > $configPath")
+        return result.isSuccess
+    }
+}
+
 typealias ConfigMap = Map<String, List<String>>
 
 object FakeDeviceConfig {
@@ -15,21 +32,18 @@ object FakeDeviceConfig {
 
     private const val CONFIG_PATH = "/data/adb/hmspush/app.conf"
 
+    var configStore: ConfigStore = ZygiskConfigStore(CONFIG_PATH)
+
     private var _configMapFlow: MutableStateFlow<ConfigMap> = MutableStateFlow(emptyMap())
     val configMapFlow: StateFlow<ConfigMap> = _configMapFlow
 
     suspend fun loadConfig(): ConfigMap {
-        val result = ShellUtil.executeCommand("su", "-c", "cat $CONFIG_PATH")
-        if (result.isSuccess) {
-            Log.d(TAG, "onSuccess, output=${result.output}")
-            _configMapFlow.value = parseConfig(result.output)
-        } else {
-            Log.e(TAG, "loadConfig error, msg: ${result.output}")
-        }
+        val content = configStore.loadConfig()
+        _configMapFlow.value = parseConfig(content)
         return _configMapFlow.value
     }
 
-    private fun parseConfig(lines: String): ConfigMap {
+    fun parseConfig(lines: String): ConfigMap {
         val configs = lines.lines()
             //ignore comment and blank line
             .filterNot { it.startsWith("#") || it.isBlank() }
@@ -47,7 +61,7 @@ object FakeDeviceConfig {
 
             //map to Config
             .mapValues {
-                it.value.map { it.second }.filterNotNull().takeIf { it.isNotEmpty() } ?: emptyList()
+                it.value.mapNotNull { it.second }.filter { it.isNotBlank() }.takeIf { it.isNotEmpty() } ?: emptyList()
             }
         Log.d(TAG, "parseConfig() returned: $configs")
         return configs
@@ -67,23 +81,30 @@ object FakeDeviceConfig {
         writeConfig()
     }
 
-    suspend fun writeConfig() {
-        val lines = _configMapFlow.value.entries
-            .map { entry ->
+    fun serializeConfig(configMap: ConfigMap): String {
+        return configMap.entries
+            .flatMap { entry ->
                 if (entry.value.isEmpty()) {
-                    entry.key
+                    listOf(entry.key)
                 } else {
-                    entry.value.joinToString("\\n") { "${entry.key}|$it" }
+                    entry.value.map { "${entry.key}|$it" }
                 }
             }
-            .joinToString("\\n") { it }
+            .joinToString("\n")
+    }
 
-        val result = ShellUtil.executeCommand("su", "-c", "mkdir -p \$(dirname $CONFIG_PATH) && echo '$lines' > $CONFIG_PATH")
+    suspend fun writeConfig() {
+        val content = serializeConfig(_configMapFlow.value)
+        val success = configStore.saveConfig(content)
 
-        if (result.isSuccess) {
-            Log.d(TAG, "writeConfig output=${result.output}")
+        if (success) {
+            Log.d(TAG, "writeConfig success")
         } else {
-            Log.e(TAG, "writeConfig error output=${result.output}")
+            Log.e(TAG, "writeConfig failed")
         }
+    }
+
+    fun reset() {
+        _configMapFlow.value = emptyMap()
     }
 }

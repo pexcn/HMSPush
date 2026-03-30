@@ -13,6 +13,8 @@ coroutinesAndroid = "1.10.2"
 xposedApi = "82"
 hiddenApiBypass = "6.1"
 mavericks = "3.1.0"
+junit = "4.13.2"
+kotlinxCoroutinesTest = "1.10.2"
 
 
 [libraries]
@@ -40,6 +42,10 @@ xposed-api = { group = "de.robv.android.xposed", name = "api", version.ref = "xp
 hiddenapibypass = { group = "org.lsposed.hiddenapibypass", name = "hiddenapibypass", version.ref = "hiddenApiBypass" }
 mavericks = { module = "com.airbnb.android:mavericks", version.ref = "mavericks" }
 mavericks-compose = { module = "com.airbnb.android:mavericks-compose", version.ref = "mavericks" }
+
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
+
 
 
 [plugins]
