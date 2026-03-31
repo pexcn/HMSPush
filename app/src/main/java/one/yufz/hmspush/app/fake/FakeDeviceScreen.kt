@@ -100,7 +100,7 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
                             Text(text = stringResource(id = R.string.fake_device))
                             Spacer(modifier = Modifier.width(4.dp))
                             Tips {
-                                viewModel.dismissZygiskTips()
+                                viewModel.showZygiskTips()
                             }
                         }
                     }

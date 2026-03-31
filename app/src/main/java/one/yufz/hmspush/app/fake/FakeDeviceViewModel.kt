@@ -110,7 +110,13 @@ class FakeDeviceViewModel(initialState: FakeDeviceState) : MavericksViewModel<Fa
         setState { copy(error = null) }
     }
 
+    fun showZygiskTips() {
+        setState { copy(showZygiskTips = true) }
+    }
+
     fun dismissZygiskTips() {
         setState { copy(showZygiskTips = false) }
     }
+
+
 }

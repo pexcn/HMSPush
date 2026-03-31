@@ -127,7 +127,7 @@ private fun AppCard(info: AppInfo, zygiskEnabled: Boolean) {
             )
 
             //Status
-            AppStatus(info)
+            AppStatus(info, zygiskEnabled)
         }
         Spacer(modifier = Modifier.width(16.dp))
 
@@ -169,7 +169,7 @@ private fun loadAppIcon(context: Context, packageName: String): MutableState<Dra
 }
 
 @Composable
-private fun AppStatus(info: AppInfo) {
+private fun AppStatus(info: AppInfo, zygiskEnabled: Boolean) {
     val divider = " • "
     val builder = StringBuilder()
 
@@ -182,7 +182,7 @@ private fun AppStatus(info: AppInfo) {
         builder.append(lastPushInfo)
     }
 
-    if (info.useZygiskFake) {
+    if (zygiskEnabled && info.useZygiskFake) {
         builder.append(divider)
         builder.append("Zygisk")
     }
