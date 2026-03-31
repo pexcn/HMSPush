@@ -42,12 +42,14 @@ class AppListViewModel(initialState: AppListState) : MavericksViewModel<AppListS
     private val historyListFlow = HmsPushClient.getPushHistoryFlow()
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
-            FakeDeviceConfig.loadConfig()
+        viewModelScope.launch {
             supportedAppList.init()
-            setState {
-                copy(zygiskEnabled = FakeDeviceConfig.zygiskEnabled)
-            }
+        }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val zygiskEnabled = FakeDeviceConfig.zygiskEnabled
+            FakeDeviceConfig.loadConfig()
+            setState { copy(zygiskEnabled = zygiskEnabled) }
         }
 
         combine(supportedAppList.appListFlow, registeredListFlow, historyListFlow, FakeDeviceConfig.configMapFlow, ::mergeSource)
