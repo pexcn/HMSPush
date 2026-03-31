@@ -62,4 +62,15 @@
 
     <string name="hide_app_icon">隐藏应用图标</string>
     <string name="fake_device">设备伪装</string>
+    <string name="hms_push_zygisk_tips">
+         <![CDATA[
+        使用 Zygisk 伪装设备，可绕过部分应用对hook 环境的检测。
+        <br/>
+        <br/>
+        需要安装 <a href="https://github.com/fei-ke/HmsPushZygisk">HmsPushZygisk</a> 模块
+        <br/>
+        <br/>
+        注意：需要给予 HMSPush 应用 ROOT 权限。
+        ]]>
+    </string>
 </resources>

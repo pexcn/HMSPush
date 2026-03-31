@@ -63,4 +63,15 @@
     <string name="hide_app_icon">Hide App Icon</string>
     <string name="fake_device">Fake Device</string>
 
+    <string name="hms_push_zygisk_tips">
+         <![CDATA[
+        Using Zygisk to spoof the device may help bypass detection of hooking environments by some applications.
+        <br/>
+        <br/>
+        You must install the <a href="https://github.com/fei-ke/HmsPushZygisk">HmsPushZygisk</a> module.
+        <br/>
+        <br/>
+        Note: You must grant ROOT access to the HMSPush application.
+        ]]>
+    </string>
 </resources>

@@ -70,24 +70,24 @@ fun AppListScreen(searchText: String, appListViewModel: AppListViewModel = maver
 
     appListViewModel.filter(searchText)
 
-    AppList(state.filteredAppList)
+    AppList(state.filteredAppList, state.zygiskEnabled)
 }
 
 @Composable
-private fun AppList(appList: List<AppInfo>) {
+private fun AppList(appList: List<AppInfo>, zygiskEnabled: Boolean) {
     val bottomPadding = WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom).asPaddingValues()
     LazyColumn(contentPadding = bottomPadding) {
         items(
             items = appList,
             key = { it.packageName }
         ) {
-            AppCard(it)
+            AppCard(it, zygiskEnabled)
         }
     }
 }
 
 @Composable
-private fun AppCard(info: AppInfo) {
+private fun AppCard(info: AppInfo, zygiskEnabled: Boolean) {
     val drawable by loadAppIcon(LocalContext.current, info.packageName)
     val drawablePainter = rememberDrawablePainter(drawable)
     Row(
@@ -135,7 +135,7 @@ private fun AppCard(info: AppInfo) {
         var showDropdownMenu by remember { mutableStateOf(false) }
         IconButton(onClick = { showDropdownMenu = true }) {
             Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "More")
-            MoreDropdownMenu(showDropdownMenu, info, { showDropdownMenu = false })
+            MoreDropdownMenu(showDropdownMenu, info, zygiskEnabled, { showDropdownMenu = false })
         }
 
     }
@@ -196,7 +196,7 @@ private fun AppStatus(info: AppInfo) {
 }
 
 @Composable
-private fun MoreDropdownMenu(expanded: Boolean, info: AppInfo, onDismissRequest: () -> Unit) {
+private fun MoreDropdownMenu(expanded: Boolean, info: AppInfo, zygiskEnabled: Boolean, onDismissRequest: () -> Unit) {
     val context = LocalContext.current
 
     var showUnregisterDialog by remember { mutableStateOf(false) }
@@ -242,30 +242,33 @@ private fun MoreDropdownMenu(expanded: Boolean, info: AppInfo, onDismissRequest:
                 onDismissRequest()
             }
         )
-        if (info.useZygiskFake) {
-            DropdownMenuItem(
-                text = {
-                    Text(text = stringResource(R.string.menu_disable_zygisk_fake))
-                },
-                onClick = {
-                    onDismissRequest()
-                    GlobalScope.launch {
-                        FakeDeviceConfig.deleteConfig(info.packageName)
+
+        if (zygiskEnabled) {
+            if (info.useZygiskFake) {
+                DropdownMenuItem(
+                    text = {
+                        Text(text = stringResource(R.string.menu_disable_zygisk_fake))
+                    },
+                    onClick = {
+                        onDismissRequest()
+                        GlobalScope.launch {
+                            FakeDeviceConfig.deleteConfig(info.packageName)
+                        }
                     }
-                }
-            )
-        } else {
-            DropdownMenuItem(
-                text = {
-                    Text(text = stringResource(R.string.menu_enable_zygisk_fake))
-                },
-                onClick = {
-                    onDismissRequest()
-                    GlobalScope.launch {
-                        FakeDeviceConfig.update(info.packageName, emptyList())
+                )
+            } else {
+                DropdownMenuItem(
+                    text = {
+                        Text(text = stringResource(R.string.menu_enable_zygisk_fake))
+                    },
+                    onClick = {
+                        onDismissRequest()
+                        GlobalScope.launch {
+                            FakeDeviceConfig.update(info.packageName, emptyList())
+                        }
                     }
-                }
-            )
+                )
+            }
         }
         //Unregister
         if (info.registered) {
@@ -331,6 +334,6 @@ private fun Preview() {
     )
     val list = listOf(appInfo, appInfo.copy(registered = false))
     AppTheme() {
-        AppList(list)
+        AppList(list, true)
     }
 }

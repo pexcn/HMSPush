@@ -18,7 +18,8 @@ data class AppConfig(val name: String, val packageName: String, val enabled: Boo
 data class FakeDeviceState(
     val configList: List<AppConfig> = emptyList(),
     val filterKeywords: String = "",
-    val error: Throwable? = null
+    val error: Throwable? = null,
+    val showZygiskTips: Boolean = false
 ) : MavericksState {
     val filteredConfigList: List<AppConfig>
         get() = if (filterKeywords.isEmpty()) configList else
@@ -37,6 +38,10 @@ class FakeDeviceViewModel(initialState: FakeDeviceState) : MavericksViewModel<Fa
     private val fakeDeviceConfig = FakeDeviceConfig
 
     init {
+        setState {
+            copy(showZygiskTips = !fakeDeviceConfig.zygiskEnabled)
+        }
+
         combine(supportedAppList.appListFlow, fakeDeviceConfig.configMapFlow, ::mergeSource)
             .flowOn(Dispatchers.IO)
             .onEach { list ->
@@ -103,5 +108,9 @@ class FakeDeviceViewModel(initialState: FakeDeviceState) : MavericksViewModel<Fa
 
     fun onErrorShown() {
         setState { copy(error = null) }
+    }
+
+    fun dismissZygiskTips() {
+        setState { copy(showZygiskTips = false) }
     }
 }

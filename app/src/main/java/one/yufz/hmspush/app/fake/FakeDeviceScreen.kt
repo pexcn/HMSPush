@@ -53,6 +53,7 @@ import kotlinx.coroutines.launch
 import one.yufz.hmspush.R
 import one.yufz.hmspush.app.nav.LocalNavigator
 import one.yufz.hmspush.app.widget.SearchBar
+import one.yufz.hmspush.app.widget.TipsDialog
 import one.yufz.hmspush.app.workaround.mavericksViewModel
 
 @Composable
@@ -80,6 +81,9 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
             }
         )
     }
+    if (state.showZygiskTips) {
+        TipsDialog(onDismissRequest = { viewModel.dismissZygiskTips() })
+    }
 
     Scaffold(
         topBar = {
@@ -95,7 +99,9 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(text = stringResource(id = R.string.fake_device))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Tips()
+                            Tips {
+                                viewModel.dismissZygiskTips()
+                            }
                         }
                     }
                 },
@@ -133,14 +139,20 @@ fun FakeDeviceScreen(viewModel: FakeDeviceViewModel = mavericksViewModel()) {
 }
 
 @Composable
-private fun Tips() {
-    Icon(
-        modifier = Modifier
-            .size(24.dp)
-            .padding(all = 2.dp),
-        imageVector = Icons.Outlined.Info,
-        contentDescription = "tips"
-    )
+private fun Tips(requestShowTips: () -> Unit) {
+    IconButton(
+        onClick = {
+            requestShowTips()
+        }
+    ) {
+        Icon(
+            modifier = Modifier
+                .size(24.dp)
+                .padding(all = 2.dp),
+            imageVector = Icons.Outlined.Info,
+            contentDescription = "tips"
+        )
+    }
 }
 
 @Composable

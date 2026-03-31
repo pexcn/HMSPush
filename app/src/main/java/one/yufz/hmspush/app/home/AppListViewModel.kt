@@ -19,7 +19,8 @@ import one.yufz.hmspush.common.model.PushSignModel
 
 data class AppListState(
     val appList: List<AppInfo> = emptyList(),
-    val filterKeywords: String = ""
+    val filterKeywords: String = "",
+    val zygiskEnabled: Boolean = false,
 ) : MavericksState {
     val filteredAppList: List<AppInfo>
         get() = if (filterKeywords.isEmpty()) appList else appList.filter {
@@ -41,9 +42,12 @@ class AppListViewModel(initialState: AppListState) : MavericksViewModel<AppListS
     private val historyListFlow = HmsPushClient.getPushHistoryFlow()
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             FakeDeviceConfig.loadConfig()
             supportedAppList.init()
+            setState {
+                copy(zygiskEnabled = FakeDeviceConfig.zygiskEnabled)
+            }
         }
 
         combine(supportedAppList.appListFlow, registeredListFlow, historyListFlow, FakeDeviceConfig.configMapFlow, ::mergeSource)
