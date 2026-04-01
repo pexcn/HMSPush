@@ -18,7 +18,7 @@ class ZygiskConfigStore(private val configPath: String) : ConfigStore {
         ShellUtil.executeCommand("su", "-c", "mkdir -p \$(dirname $configPath) && echo '$content' > $configPath").map { Unit }
 }
 
-typealias ConfigMap = Map<String, List<String>>
+typealias ConfigMap = Map<String, Pair<List<String>, Boolean>>
 
 object FakeDeviceConfig {
     private const val TAG = "FakeDeviceConfig"
@@ -45,12 +45,14 @@ object FakeDeviceConfig {
             //ignore comment and blank line
             .filterNot { it.startsWith("#") || it.isBlank() }
 
-            //split by | and map to Pair(packageName,process)
+            //split by | and map to Triple(packageName,process,skipBuild)
             .map {
                 val split = it.split("|")
-                val packageName = split.get(0)
+                val raw = split.get(0)
+                val skipBuild = raw.startsWith("!")
+                val packageName = if (skipBuild) raw.removePrefix("!") else raw
                 val process = split.getOrNull(1)
-                Pair(packageName, process)
+                Triple(packageName, process, skipBuild)
             }
 
             //group by packageName
@@ -58,15 +60,17 @@ object FakeDeviceConfig {
 
             //map to Config
             .mapValues {
-                it.value.mapNotNull { it.second }.filter { it.isNotBlank() }.takeIf { it.isNotEmpty() } ?: emptyList()
+                val processes = it.value.mapNotNull { it.second }.filter { it.isNotBlank() }
+                val skipBuild = it.value.firstOrNull()?.third ?: false
+                Pair(processes, skipBuild)
             }
         Log.d(TAG, "parseConfig() returned: $configs")
         return configs
     }
 
-    suspend fun update(packageName: String, processList: List<String>): Result<Unit> {
+    suspend fun update(packageName: String, processList: List<String>, skipBuild: Boolean = false): Result<Unit> {
         val newMap = _configMapFlow.value.toMutableMap()
-        newMap[packageName] = processList
+        newMap[packageName] = Pair(processList, skipBuild)
         return writeConfig(newMap).onSuccess {
             _configMapFlow.value = newMap
         }
@@ -83,10 +87,11 @@ object FakeDeviceConfig {
     fun serializeConfig(configMap: ConfigMap): String {
         return configMap.entries
             .flatMap { entry ->
-                if (entry.value.isEmpty()) {
-                    listOf(entry.key)
+                val pkg = if (entry.value.second) "!${entry.key}" else entry.key
+                if (entry.value.first.isEmpty()) {
+                    listOf(pkg)
                 } else {
-                    entry.value.map { "${entry.key}|$it" }
+                    entry.value.first.map { "$pkg|$it" }
                 }
             }
             .joinToString("\n")
