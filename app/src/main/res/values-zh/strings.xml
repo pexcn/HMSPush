@@ -61,6 +61,7 @@
     <string name="clear_hms_notification_channels_done">操作已执行，请自行在通知分类页查看结果</string>
 
     <string name="hide_app_icon">隐藏应用图标</string>
+    <string name="hide_app_icon_desc">将在启动器中隐藏此应用图标，你仍然可以从 Xposed 管理器中打开此应用</string>
     <string name="fake_device">设备伪装</string>
     <string name="hms_push_zygisk_tips">
          <![CDATA[
