@@ -3,15 +3,14 @@ name: Android CI
 on:
   workflow_dispatch:
   push:
-    branches: [ master, develop, alpha ]
+    branches: [master]
     tags:
-      - 'v*'
+      - "v*"
   pull_request:
-    branches: [ master, develop, alpha ]
+    branches: [master]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -23,17 +22,11 @@ jobs:
       run: |
         git fetch --tags --force
 
-    - name: Get Tag
-      id: var
-      run: |
-        echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-        echo ::set-output name=version::${GITHUB_REF#refs/*/v}
-
     - name: set up JDK
       uses: actions/setup-java@v4
       with:
-        java-version: '21'
-        distribution: 'adopt'
+        java-version: "21"
+        distribution: "adopt"
         cache: gradle
 
     - name: Write key
@@ -67,7 +60,7 @@ jobs:
       with:
         name: ${{ env.release_artifact }}
         path: app/build/outputs/apk/release/*.apk
-        
+
     # https://github.com/LSPosed/LSPosed/blob/594604423c548c5a3596dc590f52480db7aabeaf/.github/workflows/core.yml#L112
     - name: Post to Telegram
       if: ${{ github.event_name != 'pull_request' && success() && github.ref == 'refs/heads/master' }}
@@ -84,17 +77,26 @@ jobs:
           curl -v "https://api.telegram.org/bot${BOT_TOKEN}/sendMediaGroup?chat_id=${CHANNEL_ID}&media=%5B%7B%22type%22%3A%22document%22%2C%20%22media%22%3A%22attach%3A%2F%2FapkRelease%22%7D%2C%7B%22type%22%3A%22document%22%2C%20%22media%22%3A%22attach%3A%2F%2FapkDebug%22%2C%22caption%22:${ESCAPED}%7D%5D" -F apkRelease="@$apkRelease" -F apkDebug="@$apkDebug"
         fi
 
-    - uses: ericcornelissen/git-tag-annotation-action@v2
+    - name: Get tag annotation
+      id: tag
       if: github.ref_type == 'tag'
-      id: tag-data
+      run: |
+        {
+          echo 'annotation<<EOF'
+          git for-each-ref "${GITHUB_REF}" --format '%(contents)'
+          echo 'EOF'
+          
+          echo "tag=${GITHUB_REF#refs/*/}"
+          echo "version=${GITHUB_REF#refs/*/v}"
+        } >>"${GITHUB_OUTPUT}"
 
     - name: Create Release
       if: github.ref_type == 'tag'
       uses: ncipollo/release-action@v1
       with:
-        tag: ${{ steps.var.outputs.tag }}
+        tag: ${{ steps.tag.outputs.tag }}
         token: ${{ secrets.GH_TOKEN }}
-        body: ${{ steps.tag-data.outputs.git-tag-annotation }}
+        body: ${{ steps.tag.outputs.annotation }}
         artifacts: "app/build/outputs/apk/release/*.apk,app/build/outputs/mapping/release/mapping.txt"
         allowUpdates: true
         removeArtifacts: true
@@ -103,13 +105,13 @@ jobs:
       if: github.ref_type == 'tag'
       uses: ncipollo/release-action@v1
       with:
-        name: ${{ steps.var.outputs.tag }}
-        tag: ${{ steps.var.outputs.version }}
+        name: ${{ steps.tag.outputs.tag }}
+        tag: ${{ steps.tag.outputs.version }}
         commit: main
         owner: Xposed-Modules-Repo
         repo: one.yufz.hmspush
         token: ${{ secrets.GH_TOKEN }}
-        body: ${{ steps.tag-data.outputs.git-tag-annotation }}
+        body: ${{ steps.tag.outputs.annotation }}
         artifacts: "app/build/outputs/apk/release/*.apk"
         draft: true
         allowUpdates: true
@@ -119,10 +121,11 @@ jobs:
       if: github.ref_type == 'tag'
       uses: ncipollo/release-action@v1
       with:
-        tag: ${{ steps.var.outputs.version }}
+        tag: ${{ steps.tag.outputs.version }}
         allowUpdates: true
         owner: Xposed-Modules-Repo
         repo: one.yufz.hmspush
         token: ${{ secrets.GH_TOKEN }}
         omitNameDuringUpdate: true
         omitBodyDuringUpdate: true
+
